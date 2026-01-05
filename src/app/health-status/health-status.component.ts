@@ -15,16 +15,20 @@ export class HealthStatusComponent {
   constructor(private http: HttpClient) {}
 
   fetchHealthStatus(): void {
-    this.isLoading = true;
-    this.healthStatus = 'Checking health...';
-    this.http.get<{ status: string }>('http://localhost:8080/api/health').subscribe(
+  this.isLoading = true;
+  this.healthStatus = 'Checking health...';
+
+  this.http
+    .get<{ status: string; timestamp: number }>('http://localhost:8080/api/health')
+    .subscribe(
       (response) => {
-        this.healthStatus = `Status: ${response.status}`;
+        const date = new Date(response.timestamp);
+        this.healthStatus = `Status: ${response.status} (Last checked: ${date.toLocaleString()})`;
         this.isLoading = false;
       },
       (error: HttpErrorResponse) => {
         console.error('Health check error:', error);
-        
+
         if (error.status === 0) {
           this.healthStatus = '🔴 Backend is DOWN - Cannot connect to server';
         } else if (error.status === 404) {
@@ -34,7 +38,7 @@ export class HealthStatusComponent {
         } else {
           this.healthStatus = `❌ Error: ${error.status} ${error.statusText}`;
         }
-        
+
         this.isLoading = false;
       }
     );
